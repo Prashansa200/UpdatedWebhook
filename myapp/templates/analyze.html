@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SEO Analyzer</title>
+</head>
+<body>
+    <h1>SEO Analyzer</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="url" name="website" placeholder="Enter website URL" required>
+        <button type="submit">Analyze</button>
+    </form>
+
+    {% if result %}
+        <p><strong>{{ result }}</strong></p>
+    {% endif %}
+
+    <a href="/results/">View Past Results</a>
+</body>
+</html>
