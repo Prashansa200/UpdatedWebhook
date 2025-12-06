@@ -8,8 +8,6 @@ services:
       python manage.py collectstatic --noinput
     startCommand: bash -c "python manage.py migrate --noinput && honcho start"
     envVars:
-      - key: DATABASE_URL
-        fromSecret: database-url
       - key: REDIS_URL
         fromSecret: redis-url
       - key: SECRET_KEY
