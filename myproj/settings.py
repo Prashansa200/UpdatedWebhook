@@ -149,10 +149,10 @@ CELERY_BEAT_SCHEDULE = {
 # ======================
 #      EMAIL CONFIG
 # ======================
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "prjamgade@gmail.com"
-EMAIL_HOST_PASSWORD = "eios ccnc httk qdtk"
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# Resend (HTTP email API)
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+RESEND_FROM = os.environ.get("RESEND_FROM", "Acme <onboarding@resend.dev>")
+
+
+
+
