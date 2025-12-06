@@ -29,12 +29,12 @@ def run_audit_for_all_websites():
             SeoAuditLog.objects.create(
                 website=site,
                 score=new_score,
-                audit_data=json.dumps(audit_data),
+                audit_data=json.dumps(audit_data),  # ensure JSON serializable
                 change_detected=change_detected
             )
 
             if change_detected:
-                # Update website entry
+                # Update website with new score
                 site.last_score = new_score
                 site.last_audit_data = json.dumps(audit_data)
                 site.save()
@@ -43,15 +43,11 @@ def run_audit_for_all_websites():
                 # 1️⃣ Send webhook
                 if site.webhook_url:
                     try:
-                        requests.post(
-                            site.webhook_url,
-                            json={
-                                "url": site.url,
-                                "seo_score": new_score,
-                                "audit_data": audit_data
-                            },
-                            timeout=10
-                        )
+                        requests.post(site.webhook_url, json={
+                            "url": site.url,
+                            "seo_score": new_score,
+                            "audit_data": audit_data
+                        }, timeout=10)
                         logger.info(f"Webhook sent for {site.url}")
                     except Exception as e:
                         logger.error(f"Webhook failed for {site.url}: {e}")
@@ -59,30 +55,16 @@ def run_audit_for_all_websites():
                 # 2️⃣ Send email
                 if site.user_email:
                     try:
-                        logger.info(f"Preparing to send email to {site.user_email}")
-
-                        subject = f"SEO Audit Update for {site.url}"
-                        message = (
-                            f"New SEO Score: {new_score}\n\n"
-                            f"Details:\n{json.dumps(audit_data, indent=2)}"
-                        )
-
-                        result = send_mail(
-                            subject=subject,
-                            message=message,
+                        send_mail(
+                            subject=f"SEO Audit Update for {site.url}",
+                            message=f"New SEO Score: {new_score}\n\nDetails: {json.dumps(audit_data, indent=2)}",
                             from_email=settings.EMAIL_HOST_USER,
                             recipient_list=[site.user_email],
-                            fail_silently=False,  
+                            fail_silently=False,
                         )
-
-                        if result == 1:
-                            logger.info(f"Email sent successfully to {site.user_email}")
-                        else:
-                            logger.error(f"Email sending returned unexpected result: {result}")
-
+                        logger.info(f"Email sent for {site.url}")
                     except Exception as e:
-                        logger.error(f"Email failed for {site.url} — ERROR: {e}", exc_info=True)
-
+                        logger.error(f"Email failed for {site.url}: {e}")
             else:
                 logger.info(f"No change in SEO score for {site.url}: {new_score}")
 

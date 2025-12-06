@@ -154,5 +154,5 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "prjamgade@gmail.com"
-EMAIL_HOST_PASSWORD = "getd tuae pkge aidz"
+EMAIL_HOST_PASSWORD = "eios ccnc httk qdtk"
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
