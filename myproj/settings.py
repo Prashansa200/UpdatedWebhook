@@ -141,7 +141,7 @@ from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = {
     'run-seo-audit-every-5-mins': {
         'task': 'myapp.tasks.run_audit_for_all_websites',
-        'schedule': 120.0,  # every 5 minutes
+        'schedule': 120.0,  # every 2 minutes
     },
 }
 
