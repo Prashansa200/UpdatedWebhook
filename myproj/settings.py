@@ -1,7 +1,6 @@
 import os
-
+import ssl
 from pathlib import Path
-import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,8 +29,11 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    # IMPORTANT: Whitenoise for static files on Render
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -60,8 +62,7 @@ WSGI_APPLICATION = 'myproj.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# Using SQLite (works fine with Render)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -69,19 +70,8 @@ DATABASES = {
     }
 }
 
-if os.getenv("DATABASE_URL"):
-    DATABASES['default'] = dj_database_url.parse(
-        os.environ["DATABASE_URL"],
-        conn_max_age=600,
-        ssl_require=True
-    )
 
-# Celery (keep your current Upstash Redis env var)
-REDIS_URL = os.getenv("REDIS_URL")
-CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = REDIS_URL
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -100,7 +90,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -112,32 +101,54 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Whitenoise static file storage
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# Celery Config
-# REDIS_URL = os.getenv("REDIS_URL")
-# CELERY_BROKER_URL = os.getenv("REDIS_URL")
-# CELERY_RESULT_BACKEND = os.getenv("REDIS_URL")
+
+
+# =====================
+#      CELERY CONFIG
+# =====================
+
+# Using Upstash Redis (rediss://)
+CELERY_BROKER_URL = os.getenv("REDIS_URL")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL")
+
+# Important fix for Render + Celery startup
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# FIX FOR REDISS:// (Upstash requires SSL parameters)
+BROKER_USE_SSL = {
+    "ssl_cert_reqs": ssl.CERT_NONE,
+}
+
+CELERY_REDIS_BACKEND_USE_SSL = {
+    "ssl_cert_reqs": ssl.CERT_NONE,
+}
+
+
+# Celery Beat Schedule
+from celery.schedules import crontab
 
 CELERY_BEAT_SCHEDULE = {
-    'run-seo-audit-every-minute': {
+    'run-seo-audit-every-5-mins': {
         'task': 'myapp.tasks.run_audit_for_all_websites',
-        'schedule': 300.0,  
+        'schedule': 300.0,  # every 5 minutes
     },
 }
 
 
-
-# Email Configuration (Gmail example)
+# ======================
+#      EMAIL CONFIG
+# ======================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
